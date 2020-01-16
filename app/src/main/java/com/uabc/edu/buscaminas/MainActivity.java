@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.util.Random;
+
 public class MainActivity extends AppCompatActivity
         implements View.OnTouchListener {
 
@@ -50,6 +52,12 @@ public class MainActivity extends AppCompatActivity
         for(int f=0;f<8;f++){ for(int c=0;c<8;c++){
             casillas[f][c]=new Casilla();
         }}
+
+        this.disponerBombas();
+        this.contarBombasPerimetro();
+        activo = true;
+
+        fondo.invalidate();
     }
                   private final int BOMBA=80;
                   private final int VALOR=0;
@@ -72,16 +80,24 @@ public class MainActivity extends AppCompatActivity
                                         .show();
                                 activo=false;
                             }else if(casillas[i][j].getContenido()==VALOR){
-                                //Recorrer
-                                //Invalidar el fondo
-                            }
+                                //TODO Recorrer
+                                recorrer(i,j);
 
+                            }
+                            //TODO Invalidar el fondo
+                            fondo.invalidate();
                         }
                     }
                 }
             }
 
-        return false;
+        if (gano() && activo) {
+            Toast.makeText(this,
+                    "Ganaste",
+                    Toast.LENGTH_LONG).show();
+            activo = false;
+        }
+        return true;
     }
 
     private boolean gano(){
@@ -104,8 +120,10 @@ public class MainActivity extends AppCompatActivity
     private void disponerBombas(){
         int cantidad=8;
         do{
-            int fila= (int)Math.random()*8;
-            int columna=(int)Math.random()*8;
+            Random random=new Random();
+            random.nextInt(8);
+            int fila= (int)random.nextInt(8);
+            int columna=(int)random.nextInt(8);
             if(casillas[fila][columna].getContenido()==VALOR){
                 casillas[fila][columna].setContenido(BOMBA);
                 cantidad--;
@@ -153,6 +171,35 @@ public class MainActivity extends AppCompatActivity
         return total;
     }
 
+private void recorrer(int fila, int columna){
+        if(fila>=0 && fila <8 && columna >=0 && columna<8){
+            if(casillas[fila][columna].getContenido()==VALOR){
+                casillas[fila][columna].setDestapado(true);
+                casillas[fila][columna].setContenido(50);
+                recorrer(fila,columna+1);
+                recorrer(fila,columna-1);
+                recorrer(fila-1,columna);
+                recorrer(fila+1,columna);
+                recorrer(fila-1,columna-1);
+                recorrer(fila+1,columna+1);
+                recorrer(fila-1,columna+1);
+                recorrer(fila+1,columna-1);
+            }else if(casillas[fila][columna].getContenido() >=1
+            &&casillas[fila][columna].getContenido()<=8){
+                casillas[fila][columna].setDestapado(true);
+            }
+        }
+}
+private void contarBombasPerimetro() {
+        for (int f = 0; f < 8; f++) {
+            for (int c = 0; c < 8; c++) {
+                if (casillas[f][c].getContenido() == 0) {
+                    int cant = contarCoordenadas(f, c);
+                    casillas[f][c].setContenido(cant);
+                }
+            }
+        }
+    }
 
 
     class Tablero extends View{
@@ -161,23 +208,58 @@ public class MainActivity extends AppCompatActivity
             super(context);
         }
 
-        @Override
         protected void onDraw(Canvas canvas) {
-
-            canvas.drawRGB(0,0,0);
-            canvas.getWidth();
-            canvas.getHeight();
-            Paint paint=new Paint();
+            canvas.drawRGB(0, 0, 0);
+            int ancho = 0;
+            if (canvas.getWidth() < canvas.getHeight())
+                ancho = fondo.getWidth();
+            else
+                ancho = fondo.getHeight();
+            int anchocua = ancho / 8;
+            Paint paint = new Paint();
             paint.setTextSize(50);
-            Paint paint2=new Paint();
+            Paint paint2 = new Paint();
             paint2.setTextSize(50);
             paint2.setTypeface(Typeface.DEFAULT_BOLD);
-            paint2.setARGB(255,0,0,255);
-            Paint paintLineal=new Paint();
-            paintLineal.setARGB(255,255,255,255);
+            paint2.setARGB(255, 0, 0, 255);
+            Paint paintlinea1 = new Paint();
+            paintlinea1.setARGB(255, 255, 255, 255);
+            int filaact = 0;
+            for (int f = 0; f < 8; f++) {
+                for (int c = 0; c < 8; c++) {
+                    casillas[f][c].fijarXY(c * anchocua, filaact, anchocua);
+                    if (casillas[f][c].isDestapado() == false)
+                        paint.setARGB(153, 204, 204, 204);
+                    else
+                        paint.setARGB(255, 153, 153, 153);
+                    canvas.drawRect(c * anchocua, filaact, c * anchocua
+                            + anchocua - 2, filaact + anchocua - 2, paint);
+                    // linea blanca
+                    canvas.drawLine(c * anchocua, filaact, c * anchocua
+                            + anchocua, filaact, paintlinea1);
+                    canvas.drawLine(c * anchocua + anchocua - 1, filaact, c
+                                    * anchocua + anchocua - 1, filaact + anchocua,
+                            paintlinea1);
 
+                    if (casillas[f][c].getContenido() >= 1
+                            && casillas[f][c].getContenido() <= 8
+                            && casillas[f][c].isDestapado())
+                        canvas.drawText(
+                                String.valueOf(casillas[f][c].getContenido()), c
+                                        * anchocua + (anchocua / 2) - 8,
+                                filaact + anchocua / 2, paint2);
 
+                    if (casillas[f][c].getContenido() == 80
+                            && casillas[f][c].isDestapado()) {
+                        Paint bomba = new Paint();
+                        bomba.setARGB(255, 255, 0, 0);
+                        canvas.drawCircle(c * anchocua + (anchocua / 2),
+                                filaact + (anchocua / 2), 8, bomba);
+                    }
 
+                }
+                filaact = filaact + anchocua;
+            }
         }
     }
 }
