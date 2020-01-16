@@ -84,6 +84,76 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
+    private boolean gano(){
+        int cant=0;
+        for (int i = 0; i < 8 ; i++) {
+            for (int j = 0; j <8 ; j++) {
+                if(casillas[i][j].isDestapado()){
+                    cant++;
+                }
+            }
+        }
+
+        if(cant==56){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    private void disponerBombas(){
+        int cantidad=8;
+        do{
+            int fila= (int)Math.random()*8;
+            int columna=(int)Math.random()*8;
+            if(casillas[fila][columna].getContenido()==VALOR){
+                casillas[fila][columna].setContenido(BOMBA);
+                cantidad--;
+            }
+        }while (cantidad!=0);
+    }
+    private int contarCoordenadas(int fila,int columna){
+        int total=0;
+        if(fila-1 >=0 && columna-1 >=0){
+            if(casillas[fila-1][columna-1].getContenido()==BOMBA){
+                total++;
+            }
+        }
+        if(fila-1>=0){
+            if(casillas[fila-1][columna].getContenido()==BOMBA){
+                total++;
+            }
+        }
+        if(fila-1 >=0 && columna+1<8){
+            if(casillas[fila-1][columna+1].getContenido()==BOMBA){
+                total++;
+            }
+        }
+        if (columna + 1 < 8) {
+            if (casillas[fila][columna + 1].getContenido() == BOMBA)
+                total++;
+        }
+        if (fila + 1 < 8 && columna + 1 < 8) {
+            if (casillas[fila + 1][columna + 1].getContenido() == BOMBA)
+                total++;
+        }
+
+        if (fila + 1 < 8) {
+            if (casillas[fila + 1][columna].getContenido() == BOMBA)
+                total++;
+        }
+        if (fila + 1 < 8 && columna - 1 >= 0) {
+            if (casillas[fila + 1][columna - 1].getContenido() == BOMBA)
+                total++;
+        }
+        if (columna - 1 >= 0) {
+            if (casillas[fila][columna - 1].getContenido() == BOMBA)
+                total++;
+        }
+        return total;
+    }
+
+
 
     class Tablero extends View{
 
